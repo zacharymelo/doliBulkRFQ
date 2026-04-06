@@ -82,6 +82,11 @@ if ($action == 'create_proposal' && $user->hasRight('supplier_proposal', 'creer'
 	// Options
 	$include_prices = GETPOSTINT('include_prices');
 
+	// TEMP DEBUG: force include_prices and log what we received
+	if (getDolGlobalString('BULKRFQ_DEBUG_MODE')) {
+		setEventMessages('Debug POST: include_prices='.$include_prices.' socid='.$socid.' raw='.GETPOST('include_prices', 'alpha'), null, 'warnings');
+	}
+
 	// Decode selected products
 	$selected_json = GETPOST('selected_products', 'restricthtml');
 	$selections = array();
@@ -165,6 +170,11 @@ if ($action == 'create_proposal' && $user->hasRight('supplier_proposal', 'creer'
 								break;
 						}
 					}
+				}
+
+				// Debug: trace price resolution per line
+				if (getDolGlobalString('BULKRFQ_DEBUG_MODE') && $include_prices) {
+					dol_syslog('BulkRFQ price debug: product='.$product_id.' pu_ht='.$pu_ht.' include_prices='.$include_prices.' socid='.$socid, LOG_WARNING);
 				}
 
 				$addline_result = $proposal->addline(
