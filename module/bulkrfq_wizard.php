@@ -189,20 +189,26 @@ print '</tr>';
 print '</table>';
 print '</div>';
 
-// Inline Select2 binding for vendor selector — must be after select_company renders.
-// Matches the pattern from doli-returns/customerreturn_card.php:637
-print '<script>
-(function() {
+// Inline Select2 binding for vendor selector — self-contained, no external JS dependency.
+// Matches the pattern from doli-returns/customerreturn_card.php:622-644
+print '<script>(function() {
 	function onVendorChange() {
-		if (typeof bulkrfqOnVendorChange === "function") { bulkrfqOnVendorChange(); }
+		var socEl = document.querySelector("[name=socid]");
+		var socid = socEl ? parseInt(socEl.value, 10) || 0 : 0;
+		var btn = document.getElementById("bulkrfq-show-vendor");
+		if (btn) { btn.disabled = (socid <= 0); }
 	}
+
 	if (typeof jQuery !== "undefined") {
 		jQuery(document).on("select2:select select2:clear", "[name=socid]", onVendorChange);
 	}
-	var el = document.querySelector("[name=socid]");
-	if (el) { el.addEventListener("change", onVendorChange); }
-})();
-</script>';
+	document.addEventListener("change", function(e) {
+		if (e.target && e.target.name === "socid") { onVendorChange(); }
+	});
+
+	var initEl = document.querySelector("[name=socid]");
+	if (initEl && parseInt(initEl.value, 10) > 0) { onVendorChange(); }
+})();</script>';
 
 // -- Product list (initial load: always all products) --
 $filters = array(

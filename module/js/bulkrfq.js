@@ -541,11 +541,6 @@
 			});
 		}
 
-		// Expose vendor change handler for the inline Select2 binding
-		// in bulkrfq_wizard.php (matches doli-returns pattern)
-		window.bulkrfqOnVendorChange = function () {
-			updateVendorButtonState();
-		};
 	}
 
 	// Run on DOM ready
