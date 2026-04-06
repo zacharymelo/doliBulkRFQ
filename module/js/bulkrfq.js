@@ -274,7 +274,9 @@
 			return;
 		}
 		var cfg = window.bulkrfqConfig || {};
-		if (vendorId > 0) {
+		var unpricedCb = document.getElementById('bulkrfq-show-unpriced');
+		var showingAll = unpricedCb && unpricedCb.checked;
+		if (vendorId > 0 && !showingAll) {
 			infoDiv.className = 'info bulkrfq-filter-info';
 			infoDiv.textContent = cfg.labelVendorInfo || 'Showing vendor products only';
 			infoDiv.style.display = '';
