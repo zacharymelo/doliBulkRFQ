@@ -189,6 +189,21 @@ print '</tr>';
 print '</table>';
 print '</div>';
 
+// Inline Select2 binding for vendor selector — must be after select_company renders.
+// Matches the pattern from doli-returns/customerreturn_card.php:637
+print '<script>
+(function() {
+	function onVendorChange() {
+		if (typeof bulkrfqOnVendorChange === "function") { bulkrfqOnVendorChange(); }
+	}
+	if (typeof jQuery !== "undefined") {
+		jQuery(document).on("select2:select select2:clear", "[name=socid]", onVendorChange);
+	}
+	var el = document.querySelector("[name=socid]");
+	if (el) { el.addEventListener("change", onVendorChange); }
+})();
+</script>';
+
 // -- Product list (initial load: always all products) --
 $filters = array(
 	'search_ref'   => $search_ref,

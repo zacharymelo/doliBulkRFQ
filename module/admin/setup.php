@@ -35,6 +35,22 @@ if (!$user->admin) {
 	accessforbidden();
 }
 
+$action = GETPOST('action', 'aZ09');
+
+// Save settings
+if ($action == 'update') {
+	$settings = array(
+		'BULKRFQ_DEBUG_MODE',
+	);
+
+	foreach ($settings as $key) {
+		$val = GETPOST($key, 'alpha');
+		dolibarr_set_const($db, $key, $val, 'chaine', 0, '', $conf->entity);
+	}
+
+	setEventMessages($langs->trans('SetupSaved'), null, 'mesgs');
+}
+
 // View
 llxHeader('', $langs->trans('BulkRfqSetup'));
 
@@ -43,6 +59,10 @@ print load_fiche_titre($langs->trans('BulkRfqSetup'), $linkback, 'title_setup');
 
 print '<div class="opacitymedium">'.$langs->trans('BulkRfqAbout').'</div>';
 print '<br>';
+
+print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
+print '<input type="hidden" name="token" value="'.newToken().'">';
+print '<input type="hidden" name="action" value="update">';
 
 print '<table class="noborder centpercent">';
 print '<tr class="liste_titre"><td>'.$langs->trans('Parameter').'</td><td>'.$langs->trans('Value').'</td><td class="opacitymedium">'.$langs->trans('Description').'</td></tr>';
@@ -59,11 +79,18 @@ print '</td><td></td></tr>';
 // Debug mode
 print '<tr class="oddeven"><td>'.$langs->trans('DebugMode').'</td>';
 print '<td>';
-print ajax_constantonoff('BULKRFQ_DEBUG_MODE');
+$chk_debug = getDolGlobalString('BULKRFQ_DEBUG_MODE') ? ' checked' : '';
+print '<input type="checkbox" name="BULKRFQ_DEBUG_MODE" value="1"'.$chk_debug.'>';
 print '</td>';
 print '<td class="opacitymedium">'.$langs->trans('DebugModeDesc').'</td></tr>';
 
 print '</table>';
+
+print '<div class="center">';
+print '<input type="submit" class="button button-save" value="'.$langs->trans('Save').'">';
+print '</div>';
+
+print '</form>';
 
 llxFooter();
 $db->close();
