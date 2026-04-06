@@ -156,10 +156,6 @@
 		}
 		if (vendorId > 0) {
 			params += '&vendor_id=' + vendorId;
-			var unpricedCb = document.getElementById('bulkrfq-show-unpriced');
-			if (unpricedCb && unpricedCb.checked) {
-				params += '&vendor_show_all=1';
-			}
 		}
 
 		fetch(cfg.ajaxUrl + params, {credentials: 'same-origin'})
@@ -274,9 +270,7 @@
 			return;
 		}
 		var cfg = window.bulkrfqConfig || {};
-		var unpricedCb = document.getElementById('bulkrfq-show-unpriced');
-		var showingAll = unpricedCb && unpricedCb.checked;
-		if (vendorId > 0 && !showingAll) {
+		if (vendorId > 0) {
 			infoDiv.className = 'info bulkrfq-filter-info';
 			infoDiv.textContent = cfg.labelVendorInfo || 'Showing vendor products only';
 			infoDiv.style.display = '';
@@ -314,12 +308,6 @@
 		}
 
 		vendorFilterActive = isVendor;
-
-		// Show/hide the "include unpriced" checkbox
-		var unpricedWrapper = document.getElementById('bulkrfq-unpriced-wrapper');
-		if (unpricedWrapper) {
-			unpricedWrapper.style.display = isVendor ? '' : 'none';
-		}
 
 		if (isVendor) {
 			setButtonClass(btnAll, 'butAction');
@@ -590,19 +578,6 @@
 				}
 				setToggleState(true);
 				fetchAndRebuildTable(socid);
-			});
-		}
-
-		// Include unpriced checkbox — refresh table when toggled
-		var unpricedCb = document.getElementById('bulkrfq-show-unpriced');
-		if (unpricedCb) {
-			unpricedCb.addEventListener('change', function () {
-				if (vendorFilterActive) {
-					var socid = getSelectedVendorId();
-					if (socid > 0) {
-						fetchAndRebuildTable(socid);
-					}
-				}
 			});
 		}
 

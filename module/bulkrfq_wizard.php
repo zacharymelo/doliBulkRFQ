@@ -333,10 +333,6 @@ print '</a> ';
 print '<a href="#" id="bulkrfq-show-vendor" class="butActionRefused classfortooltip bulkrfq-toggle-btn" title="'.$langs->trans('SelectVendorFirst').'">';
 print '<span class="fa fa-filter paddingright"></span>'.$langs->trans('ShowVendorProducts');
 print '</a>';
-print ' <span id="bulkrfq-unpriced-wrapper" style="display:none;" class="marginleftonly">';
-print '<input type="checkbox" id="bulkrfq-show-unpriced" value="1"> ';
-print '<label for="bulkrfq-show-unpriced" class="opacitymedium">'.$langs->trans('IncludeUnpriced').'</label>';
-print '</span>';
 print '</div>';
 print '<div id="bulkrfq-filter-info"></div>';
 

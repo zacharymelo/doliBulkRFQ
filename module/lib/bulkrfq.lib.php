@@ -41,7 +41,6 @@ function bulkrfqFetchProducts($db, $sortfield = 'p.ref', $sortorder = 'ASC', $li
 	$safe_sortorder = strtoupper($sortorder) === 'DESC' ? 'DESC' : 'ASC';
 
 	$vendor_id = !empty($filters['vendor_id']) ? (int) $filters['vendor_id'] : 0;
-	$vendor_show_all = !empty($filters['vendor_show_all']) ? true : false;
 
 	$sql = "SELECT p.rowid, p.ref, p.label, p.fk_product_type, p.price, p.barcode, p.tva_tx";
 	if ($vendor_id > 0) {
@@ -49,9 +48,7 @@ function bulkrfqFetchProducts($db, $sortfield = 'p.ref', $sortorder = 'ASC', $li
 	}
 	$sql .= " FROM ".MAIN_DB_PREFIX."product p";
 	if ($vendor_id > 0) {
-		// LEFT JOIN shows all products with vendor columns; INNER JOIN filters to vendor's products only
-		$join_type = $vendor_show_all ? "LEFT JOIN" : "INNER JOIN";
-		$sql .= " ".$join_type." ".MAIN_DB_PREFIX."product_fournisseur_price pfp ON pfp.fk_product = p.rowid";
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."product_fournisseur_price pfp ON pfp.fk_product = p.rowid";
 		$sql .= " AND pfp.fk_soc = ".$vendor_id;
 		$sql .= " AND pfp.entity IN (".getEntity('productsupplierprice').")";
 	}
@@ -90,13 +87,11 @@ function bulkrfqFetchProducts($db, $sortfield = 'p.ref', $sortorder = 'ASC', $li
 function bulkrfqCountProducts($db, $filters = array())
 {
 	$vendor_id = !empty($filters['vendor_id']) ? (int) $filters['vendor_id'] : 0;
-	$vendor_show_all = !empty($filters['vendor_show_all']) ? true : false;
 
 	$sql = "SELECT COUNT(*) AS total";
 	$sql .= " FROM ".MAIN_DB_PREFIX."product p";
 	if ($vendor_id > 0) {
-		$join_type = $vendor_show_all ? "LEFT JOIN" : "INNER JOIN";
-		$sql .= " ".$join_type." ".MAIN_DB_PREFIX."product_fournisseur_price pfp ON pfp.fk_product = p.rowid";
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."product_fournisseur_price pfp ON pfp.fk_product = p.rowid";
 		$sql .= " AND pfp.fk_soc = ".$vendor_id;
 		$sql .= " AND pfp.entity IN (".getEntity('productsupplierprice').")";
 	}

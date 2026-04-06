@@ -34,7 +34,6 @@ ShowVendorProducts = Vendor's Products Only
 VendorFilterInfo = Showing only products with a known price from the selected vendor
 AllProductsInfo = Showing all purchasable products
 SelectVendorFirst = Select a vendor above to filter by vendor products
-IncludeUnpriced = Include unpriced products
 
 # Actions
 IncludeBuyPrices = Include buy prices
