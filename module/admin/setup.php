@@ -35,21 +35,55 @@ if (!$user->admin) {
 	accessforbidden();
 }
 
+// Valid price source keys
+$valid_sources = array('vendor_price', 'any_supplier', 'cost_price', 'pmp');
+
 $action = GETPOST('action', 'aZ09');
 
 // Save settings
 if ($action == 'update') {
-	$settings = array(
-		'BULKRFQ_DEBUG_MODE',
-	);
+	// Checkbox settings
+	$val = GETPOST('BULKRFQ_DEBUG_MODE', 'alpha');
+	dolibarr_set_const($db, 'BULKRFQ_DEBUG_MODE', $val, 'chaine', 0, '', $conf->entity);
 
-	foreach ($settings as $key) {
-		$val = GETPOST($key, 'alpha');
-		dolibarr_set_const($db, $key, $val, 'chaine', 0, '', $conf->entity);
+	// Price priority — build comma-separated string from the 4 selects
+	$priority = array();
+	for ($i = 1; $i <= 4; $i++) {
+		$src = GETPOST('price_priority_'.$i, 'aZ09');
+		if (in_array($src, $valid_sources) && !in_array($src, $priority)) {
+			$priority[] = $src;
+		}
 	}
+	// Append any sources the user omitted (safety net)
+	foreach ($valid_sources as $src) {
+		if (!in_array($src, $priority)) {
+			$priority[] = $src;
+		}
+	}
+	dolibarr_set_const($db, 'BULKRFQ_PRICE_PRIORITY', implode(',', $priority), 'chaine', 0, '', $conf->entity);
 
 	setEventMessages($langs->trans('SetupSaved'), null, 'mesgs');
 }
+
+// Load current priority
+$default_priority = 'vendor_price,any_supplier,cost_price,pmp';
+$current_priority = explode(',', getDolGlobalString('BULKRFQ_PRICE_PRIORITY', $default_priority));
+// Sanitize
+$current_priority = array_values(array_intersect($current_priority, $valid_sources));
+// Fill missing
+foreach ($valid_sources as $src) {
+	if (!in_array($src, $current_priority)) {
+		$current_priority[] = $src;
+	}
+}
+
+// Labels for price sources
+$source_labels = array(
+	'vendor_price'  => $langs->trans('PriceSrcVendor'),
+	'any_supplier'  => $langs->trans('PriceSrcAnySupplier'),
+	'cost_price'    => $langs->trans('PriceSrcCostPrice'),
+	'pmp'           => $langs->trans('PriceSrcPMP'),
+);
 
 // View
 llxHeader('', $langs->trans('BulkRfqSetup'));
@@ -75,6 +109,25 @@ if (isModEnabled('supplier_proposal')) {
 	print '<span class="badge badge-status8">'.$langs->trans('Disabled').'</span>';
 }
 print '</td><td></td></tr>';
+
+// Price priority
+print '<tr class="oddeven"><td>'.$langs->trans('PricePriority').'</td>';
+print '<td>';
+for ($i = 0; $i < 4; $i++) {
+	$pos = $i + 1;
+	$selected = isset($current_priority[$i]) ? $current_priority[$i] : '';
+	print '<div class="inline-block marginrightonly">';
+	print '<span class="opacitymedium small">'.$pos.'.</span> ';
+	print '<select name="price_priority_'.$pos.'" class="flat minwidth200">';
+	foreach ($valid_sources as $src) {
+		$sel = ($selected === $src) ? ' selected' : '';
+		print '<option value="'.$src.'"'.$sel.'>'.dol_escape_htmltag($source_labels[$src]).'</option>';
+	}
+	print '</select>';
+	print '</div><br>';
+}
+print '</td>';
+print '<td class="opacitymedium">'.$langs->trans('PricePriorityDesc').'</td></tr>';
 
 // Debug mode
 print '<tr class="oddeven"><td>'.$langs->trans('DebugMode').'</td>';
