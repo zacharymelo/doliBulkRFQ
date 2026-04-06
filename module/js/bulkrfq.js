@@ -1,13 +1,15 @@
 /**
- * Bulk RFQ — client-side selection persistence and staging area.
+ * Bulk RFQ — client-side selection persistence, staging area, and
+ * AJAX-driven vendor product filtering.
  *
  * Uses sessionStorage (tab-scoped, auto-clears on tab close) to persist
- * product selections across pagination reloads.
+ * product selections across pagination reloads and AJAX table refreshes.
  */
 (function () {
 	'use strict';
 
 	var STORAGE_KEY = 'bulkrfq_selections';
+	var vendorFilterActive = false;
 
 	/* ---- Storage helpers ---- */
 
@@ -90,7 +92,6 @@
 			var pid = cb.getAttribute('data-product-id');
 			if (store[pid]) {
 				cb.checked = true;
-				// Sync qty input too
 				var qtyInput = document.querySelector('.bulkrfq-qty[data-product-id="' + pid + '"]');
 				if (qtyInput) {
 					qtyInput.value = store[pid].qty;
@@ -99,7 +100,7 @@
 				cb.checked = false;
 			}
 		}
-		updateSelectAllState(store);
+		updateSelectAllState();
 	}
 
 	function updateSelectAllState() {
@@ -122,6 +123,205 @@
 		selectAll.checked = allChecked;
 	}
 
+	/* ---- AJAX product table rebuild ---- */
+
+	function getSelectedVendorId() {
+		var sel = document.querySelector('select[name="socid"], input[name="socid"]');
+		return sel ? (parseInt(sel.value, 10) || 0) : 0;
+	}
+
+	function fetchAndRebuildTable(vendorId) {
+		var cfg = window.bulkrfqConfig || {};
+		if (!cfg.ajaxUrl) {
+			return;
+		}
+
+		var searchRef = document.querySelector('input[name="search_ref"]');
+		var searchLabel = document.querySelector('input[name="search_label"]');
+
+		var params = '?limit=' + (cfg.limit || 25) + '&page=0';
+		if (searchRef && searchRef.value) {
+			params += '&search_ref=' + encodeURIComponent(searchRef.value);
+		}
+		if (searchLabel && searchLabel.value) {
+			params += '&search_label=' + encodeURIComponent(searchLabel.value);
+		}
+		if (vendorId > 0) {
+			params += '&vendor_id=' + vendorId;
+		}
+
+		fetch(cfg.ajaxUrl + params, {credentials: 'same-origin'})
+			.then(function (r) { return r.json(); })
+			.then(function (data) {
+				rebuildTableBody(data.products || [], vendorId);
+				updateFilterInfo(vendorId);
+				var store = loadStore();
+				syncCheckboxesFromStore(store);
+			})
+			.catch(function () {
+				// On error, keep existing table
+			});
+	}
+
+	function rebuildTableBody(products, vendorId) {
+		var cfg = window.bulkrfqConfig || {};
+		var tbody = document.getElementById('bulkrfq-tbody');
+		var showVendorCols = vendorId > 0;
+		var colspan = showVendorCols ? 9 : 7;
+
+		if (products.length === 0) {
+			tbody.innerHTML = '<tr class="oddeven"><td colspan="' + colspan + '" class="opacitymedium">' + escapeHtml(cfg.labelNoRecords || 'No records found') + '</td></tr>';
+			rebuildTableHeader(showVendorCols);
+			return;
+		}
+
+		var html = '';
+		for (var i = 0; i < products.length; i++) {
+			var p = products[i];
+			var typeLabel = p.fk_product_type === 1 ? (cfg.labelService || 'Service') : (cfg.labelProduct || 'Product');
+			var rowClass = (i % 2 === 0) ? 'oddeven' : 'oddeven';
+
+			html += '<tr class="' + rowClass + '">';
+			html += '<td class="center"><input type="checkbox" class="bulkrfq-select" data-product-id="' + p.rowid + '" data-product-ref="' + escapeHtml(p.ref) + '" data-product-label="' + escapeHtml(p.label) + '"></td>';
+			html += '<td><a href="' + escapeHtml(cfg.productCardUrl || '') + p.rowid + '" target="_blank">' + escapeHtml(p.ref) + '</a></td>';
+			html += '<td>' + escapeHtml(p.label) + '</td>';
+			html += '<td>' + escapeHtml(typeLabel) + '</td>';
+			html += '<td>' + escapeHtml(p.barcode || '') + '</td>';
+			if (showVendorCols) {
+				html += '<td>' + escapeHtml(p.supplier_ref || '') + '</td>';
+				html += '<td class="right">' + formatPrice(p.supplier_price) + '</td>';
+			}
+			html += '<td class="right">' + formatPrice(p.price) + '</td>';
+			html += '<td class="right"><input type="number" class="bulkrfq-qty flat right" data-product-id="' + p.rowid + '" value="1" step="any" min="0.01" style="width:70px;"></td>';
+			html += '</tr>';
+		}
+
+		rebuildTableHeader(showVendorCols);
+		tbody.innerHTML = html;
+	}
+
+	function rebuildTableHeader(showVendorCols) {
+		var thead = document.getElementById('bulkrfq-thead');
+		if (!thead) {
+			return;
+		}
+		var rows = thead.querySelectorAll('tr');
+		// Remove old vendor columns if they exist
+		var oldVendorThs = thead.querySelectorAll('.bulkrfq-vendor-col');
+		for (var i = 0; i < oldVendorThs.length; i++) {
+			oldVendorThs[i].remove();
+		}
+
+		if (!showVendorCols) {
+			return;
+		}
+
+		// Insert vendor columns before Buy Price in the header row (first tr)
+		var headerRow = rows[0];
+		var buyPriceTh = null;
+		var ths = headerRow.querySelectorAll('th');
+		// Buy Price is the second-to-last th
+		if (ths.length >= 2) {
+			buyPriceTh = ths[ths.length - 2];
+		}
+
+		if (buyPriceTh) {
+			var suppRefTh = document.createElement('th');
+			suppRefTh.className = 'bulkrfq-vendor-col';
+			suppRefTh.textContent = 'Supplier Ref';
+			headerRow.insertBefore(suppRefTh, buyPriceTh);
+
+			var suppPriceTh = document.createElement('th');
+			suppPriceTh.className = 'bulkrfq-vendor-col right';
+			suppPriceTh.textContent = 'Supplier Price';
+			headerRow.insertBefore(suppPriceTh, buyPriceTh);
+		}
+
+		// Insert empty tds in the filter row (second tr)
+		if (rows.length >= 2) {
+			var filterRow = rows[1];
+			var filterTds = filterRow.querySelectorAll('td');
+			// Insert before the second-to-last td (Buy Price filter cell)
+			if (filterTds.length >= 2) {
+				var buyPriceTd = filterTds[filterTds.length - 2];
+
+				var td1 = document.createElement('td');
+				td1.className = 'bulkrfq-vendor-col';
+				filterRow.insertBefore(td1, buyPriceTd);
+
+				var td2 = document.createElement('td');
+				td2.className = 'bulkrfq-vendor-col';
+				filterRow.insertBefore(td2, buyPriceTd);
+			}
+		}
+	}
+
+	function updateFilterInfo(vendorId) {
+		var infoDiv = document.getElementById('bulkrfq-filter-info');
+		if (!infoDiv) {
+			return;
+		}
+		var cfg = window.bulkrfqConfig || {};
+		if (vendorId > 0) {
+			infoDiv.className = 'info bulkrfq-filter-info';
+			infoDiv.textContent = cfg.labelVendorInfo || 'Showing vendor products only';
+			infoDiv.style.display = '';
+		} else {
+			infoDiv.style.display = 'none';
+		}
+	}
+
+	function formatPrice(val) {
+		if (val === undefined || val === null || val === '') {
+			return '';
+		}
+		var num = parseFloat(val);
+		if (isNaN(num)) {
+			return '';
+		}
+		return num.toFixed(2);
+	}
+
+	/* ---- Toggle button state ---- */
+
+	function setToggleState(isVendor) {
+		var btnAll = document.getElementById('bulkrfq-show-all');
+		var btnVendor = document.getElementById('bulkrfq-show-vendor');
+		if (!btnAll || !btnVendor) {
+			return;
+		}
+
+		vendorFilterActive = isVendor;
+
+		if (isVendor) {
+			btnAll.className = btnAll.className.replace('butActionActive', 'butAction');
+			btnVendor.className = btnVendor.className.replace('butAction', 'butActionActive');
+			if (btnVendor.className.indexOf('butActionActive') === -1) {
+				btnVendor.className += ' butActionActive';
+			}
+		} else {
+			btnVendor.className = btnVendor.className.replace('butActionActive', 'butAction');
+			btnAll.className = btnAll.className.replace('butAction', 'butActionActive');
+			if (btnAll.className.indexOf('butActionActive') === -1) {
+				btnAll.className += ' butActionActive';
+			}
+		}
+	}
+
+	function updateVendorButtonState() {
+		var btnVendor = document.getElementById('bulkrfq-show-vendor');
+		if (!btnVendor) {
+			return;
+		}
+		var socid = getSelectedVendorId();
+		btnVendor.disabled = (socid <= 0);
+		if (socid <= 0 && vendorFilterActive) {
+			// Vendor was deselected while filter was active — switch back
+			setToggleState(false);
+			fetchAndRebuildTable(0);
+		}
+	}
+
 	/* ---- Event binding ---- */
 
 	function init() {
@@ -130,6 +330,7 @@
 		// Restore state on page load
 		syncCheckboxesFromStore(store);
 		renderStagingArea(store);
+		updateVendorButtonState();
 
 		// Checkbox change
 		document.addEventListener('change', function (e) {
@@ -303,6 +504,42 @@
 				}
 			}
 		});
+
+		// -- Vendor filter toggle buttons --
+		var btnAll = document.getElementById('bulkrfq-show-all');
+		var btnVendor = document.getElementById('bulkrfq-show-vendor');
+
+		if (btnAll) {
+			btnAll.addEventListener('click', function () {
+				if (!vendorFilterActive) {
+					return; // already active
+				}
+				setToggleState(false);
+				fetchAndRebuildTable(0);
+			});
+		}
+
+		if (btnVendor) {
+			btnVendor.addEventListener('click', function () {
+				var socid = getSelectedVendorId();
+				if (socid <= 0) {
+					return;
+				}
+				if (vendorFilterActive) {
+					return; // already active
+				}
+				setToggleState(true);
+				fetchAndRebuildTable(socid);
+			});
+		}
+
+		// Vendor selector change — enable/disable the vendor filter button
+		var socidSelect = document.querySelector('select[name="socid"], input[name="socid"]');
+		if (socidSelect) {
+			socidSelect.addEventListener('change', function () {
+				updateVendorButtonState();
+			});
+		}
 	}
 
 	// Run on DOM ready
