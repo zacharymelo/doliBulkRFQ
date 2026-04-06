@@ -168,7 +168,7 @@ jQuery(function() {
 
 // Inline CSS for sortable list
 print '<style>
-.bulkrfq-sortable { list-style: none; padding: 0; margin: 0; max-width: 340px; }
+.bulkrfq-sortable { list-style: none; padding: 8px; margin: 0; max-width: 340px; border: 1px solid #ccc; border-radius: 4px; background: #f8f8f8; }
 .bulkrfq-sortable-item {
 	padding: 8px 12px;
 	margin: 4px 0;
