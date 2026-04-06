@@ -78,6 +78,9 @@ if ($action == 'create_proposal' && $user->hasRight('supplier_proposal', 'creer'
 		}
 	}
 
+	// Options
+	$include_prices = GETPOSTINT('include_prices');
+
 	// Decode selected products
 	$selected_json = GETPOST('selected_products', 'restricthtml');
 	$selections = array();
@@ -124,9 +127,15 @@ if ($action == 'create_proposal' && $user->hasRight('supplier_proposal', 'creer'
 
 				$desc = $product_obj->ref.' - '.$product_obj->label;
 
+				// Use product buy price if checkbox checked, otherwise 0
+				$pu_ht = $include_prices ? (float) $product_obj->cost_price : 0;
+				if ($include_prices && empty($pu_ht)) {
+					$pu_ht = (float) $product_obj->pmp;
+				}
+
 				$addline_result = $proposal->addline(
 					$desc,          // description
-					0,              // pu_ht (price = 0, vendor will quote)
+					$pu_ht,         // pu_ht
 					$qty,           // qty
 					$txtva,         // txtva
 					0,              // txlocaltax1
@@ -371,8 +380,13 @@ print '</table>';
 print '</div>';
 print '</div>';
 
-// -- Create button --
+// -- Create options and button --
 print '<div id="bulkrfq-create-wrapper" class="bulkrfq-create-wrapper" style="display:none;">';
+print '<div class="bulkrfq-create-options marginbottomonly">';
+print '<input type="checkbox" id="bulkrfq-include-prices" name="include_prices" value="1"> ';
+print '<label for="bulkrfq-include-prices">'.$langs->trans('IncludeBuyPrices').'</label>';
+print ' <span class="opacitymedium small">('.$langs->trans('IncludeBuyPricesDesc').')</span>';
+print '</div>';
 print '<a href="#" id="bulkrfq-create-btn" class="butAction">'.$langs->trans('CreatePriceRequest').'</a>';
 print '</div>';
 

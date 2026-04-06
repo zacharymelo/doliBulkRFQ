@@ -36,6 +36,8 @@ AllProductsInfo = Showing all purchasable products
 SelectVendorFirst = Select a vendor above to filter by vendor products
 
 # Actions
+IncludeBuyPrices = Include buy prices
+IncludeBuyPricesDesc = Pre-fill line prices from product cost price / WAP instead of leaving blank
 CreatePriceRequest = Create Price Request
 CreatingPriceRequest = Creating price request...
 
