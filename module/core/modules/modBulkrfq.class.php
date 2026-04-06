@@ -27,7 +27,7 @@ class modBulkrfq extends DolibarrModules
 
 		$this->db = $db;
 
-		$this->numero = 510300;
+		$this->numero = 510400;
 		$this->family = 'srm';
 		$this->module_position = '90';
 		$this->name = preg_replace('/^mod/i', '', get_class($this));

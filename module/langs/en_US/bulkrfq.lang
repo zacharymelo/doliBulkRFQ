@@ -1,6 +1,6 @@
 # Module descriptor
-Module510300Name = Bulk RFQ
-Module510300Desc = Bulk product selection wizard for creating Supplier Price Requests
+Module510400Name = Bulk RFQ
+Module510400Desc = Bulk product selection wizard for creating Supplier Price Requests
 
 # Menu
 BulkPriceRequest = Bulk Price Request
