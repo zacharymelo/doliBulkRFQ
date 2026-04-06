@@ -156,6 +156,10 @@
 		}
 		if (vendorId > 0) {
 			params += '&vendor_id=' + vendorId;
+			var unpricedCb = document.getElementById('bulkrfq-show-unpriced');
+			if (unpricedCb && unpricedCb.checked) {
+				params += '&vendor_show_all=1';
+			}
 		}
 
 		fetch(cfg.ajaxUrl + params, {credentials: 'same-origin'})
@@ -308,6 +312,12 @@
 		}
 
 		vendorFilterActive = isVendor;
+
+		// Show/hide the "include unpriced" checkbox
+		var unpricedWrapper = document.getElementById('bulkrfq-unpriced-wrapper');
+		if (unpricedWrapper) {
+			unpricedWrapper.style.display = isVendor ? '' : 'none';
+		}
 
 		if (isVendor) {
 			setButtonClass(btnAll, 'butAction');
@@ -578,6 +588,19 @@
 				}
 				setToggleState(true);
 				fetchAndRebuildTable(socid);
+			});
+		}
+
+		// Include unpriced checkbox — refresh table when toggled
+		var unpricedCb = document.getElementById('bulkrfq-show-unpriced');
+		if (unpricedCb) {
+			unpricedCb.addEventListener('change', function () {
+				if (vendorFilterActive) {
+					var socid = getSelectedVendorId();
+					if (socid > 0) {
+						fetchAndRebuildTable(socid);
+					}
+				}
 			});
 		}
 

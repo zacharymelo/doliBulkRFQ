@@ -51,7 +51,8 @@ $page        = GETPOSTINT('page');
 $limit       = GETPOSTINT('limit');
 $search_ref  = GETPOST('search_ref', 'alpha');
 $search_label = GETPOST('search_label', 'alpha');
-$vendor_id   = GETPOSTINT('vendor_id');
+$vendor_id       = GETPOSTINT('vendor_id');
+$vendor_show_all = GETPOSTINT('vendor_show_all');
 
 if (empty($sortfield)) {
 	$sortfield = 'p.ref';
@@ -67,7 +68,8 @@ $offset = $limit * max(0, $page);
 $filters = array(
 	'search_ref'   => $search_ref,
 	'search_label' => $search_label,
-	'vendor_id'    => $vendor_id > 0 ? $vendor_id : 0,
+	'vendor_id'      => $vendor_id > 0 ? $vendor_id : 0,
+	'vendor_show_all' => $vendor_show_all ? 1 : 0,
 );
 
 $total = bulkrfqCountProducts($db, $filters);
