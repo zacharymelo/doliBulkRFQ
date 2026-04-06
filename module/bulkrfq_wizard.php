@@ -270,8 +270,16 @@ print '<script>(function() {
 		if (e.target && e.target.name === "socid") { onVendorChange(); }
 	});
 
+	// Enable vendor button on load if a vendor is already selected (e.g. from URL param)
+	// Only update the button state — do NOT trigger a filter refresh
 	var initEl = document.querySelector("[name=socid]");
-	if (initEl && parseInt(initEl.value, 10) > 0) { onVendorChange(); }
+	if (initEl && parseInt(initEl.value, 10) > 0) {
+		var btn = document.getElementById("bulkrfq-show-vendor");
+		if (btn) {
+			btn.className = btn.className.replace("butActionRefused", "butAction");
+			btn.title = "";
+		}
+	}
 })();</script>';
 
 // -- Product list (initial load: always all products) --
