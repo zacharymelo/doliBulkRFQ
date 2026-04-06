@@ -373,7 +373,7 @@ print '</div>';
 
 // -- Create button --
 print '<div id="bulkrfq-create-wrapper" class="bulkrfq-create-wrapper" style="display:none;">';
-print '<button type="button" id="bulkrfq-create-btn" class="button butAction">'.$langs->trans('CreatePriceRequest').'</button>';
+print '<a href="#" id="bulkrfq-create-btn" class="butAction">'.$langs->trans('CreatePriceRequest').'</a>';
 print '</div>';
 
 print '</form>';
