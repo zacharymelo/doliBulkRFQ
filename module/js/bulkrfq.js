@@ -292,6 +292,14 @@
 
 	/* ---- Toggle button state ---- */
 
+	// Dolibarr uses butAction (clickable), butActionActive (current), butActionRefused (disabled)
+	// on <a> tags — not the HTML disabled attribute on <button>.
+
+	function setButtonClass(el, cls) {
+		el.className = el.className.replace(/\bbut(Action|ActionActive|ActionRefused)\b/g, '').trim();
+		el.className += ' ' + cls;
+	}
+
 	function setToggleState(isVendor) {
 		var btnAll = document.getElementById('bulkrfq-show-all');
 		var btnVendor = document.getElementById('bulkrfq-show-vendor');
@@ -302,18 +310,17 @@
 		vendorFilterActive = isVendor;
 
 		if (isVendor) {
-			btnAll.className = btnAll.className.replace('butActionActive', 'butAction');
-			btnVendor.className = btnVendor.className.replace('butAction', 'butActionActive');
-			if (btnVendor.className.indexOf('butActionActive') === -1) {
-				btnVendor.className += ' butActionActive';
-			}
+			setButtonClass(btnAll, 'butAction');
+			setButtonClass(btnVendor, 'butActionActive');
+			btnAll.classList.remove('bulkrfq-active');
+			btnVendor.classList.add('bulkrfq-active');
 		} else {
-			btnVendor.className = btnVendor.className.replace('butActionActive', 'butAction');
-			btnAll.className = btnAll.className.replace('butAction', 'butActionActive');
-			if (btnAll.className.indexOf('butActionActive') === -1) {
-				btnAll.className += ' butActionActive';
-			}
+			setButtonClass(btnVendor, 'butAction');
+			setButtonClass(btnAll, 'butActionActive');
+			btnVendor.classList.remove('bulkrfq-active');
+			btnAll.classList.add('bulkrfq-active');
 		}
+		btnVendor.title = '';
 	}
 
 	function updateVendorButtonState() {
@@ -322,11 +329,21 @@
 			return;
 		}
 		var socid = getSelectedVendorId();
-		btnVendor.disabled = (socid <= 0);
-		if (socid <= 0 && vendorFilterActive) {
-			// Vendor was deselected while filter was active — switch back
-			setToggleState(false);
-			fetchAndRebuildTable(0);
+		if (socid <= 0) {
+			if (!vendorFilterActive) {
+				setButtonClass(btnVendor, 'butActionRefused');
+			}
+			if (vendorFilterActive) {
+				// Vendor was deselected while filter was active — switch back
+				setToggleState(false);
+				fetchAndRebuildTable(0);
+			}
+		} else {
+			// Vendor selected — enable button (butAction) unless it's already active
+			if (!vendorFilterActive) {
+				setButtonClass(btnVendor, 'butAction');
+				btnVendor.title = '';
+			}
 		}
 	}
 
@@ -518,7 +535,8 @@
 		var btnVendor = document.getElementById('bulkrfq-show-vendor');
 
 		if (btnAll) {
-			btnAll.addEventListener('click', function () {
+			btnAll.addEventListener('click', function (e) {
+				e.preventDefault();
 				if (!vendorFilterActive) {
 					return; // already active
 				}
@@ -528,7 +546,12 @@
 		}
 
 		if (btnVendor) {
-			btnVendor.addEventListener('click', function () {
+			btnVendor.addEventListener('click', function (e) {
+				e.preventDefault();
+				// Don't act if butActionRefused (disabled state)
+				if (btnVendor.className.indexOf('butActionRefused') !== -1) {
+					return;
+				}
 				var socid = getSelectedVendorId();
 				if (socid <= 0) {
 					return;

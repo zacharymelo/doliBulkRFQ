@@ -196,7 +196,17 @@ print '<script>(function() {
 		var socEl = document.querySelector("[name=socid]");
 		var socid = socEl ? parseInt(socEl.value, 10) || 0 : 0;
 		var btn = document.getElementById("bulkrfq-show-vendor");
-		if (btn) { btn.disabled = (socid <= 0); }
+		if (!btn) return;
+		if (socid > 0) {
+			btn.className = btn.className.replace("butActionRefused", "butAction");
+			btn.title = "";
+		} else {
+			btn.className = btn.className.replace("butAction", "butActionRefused");
+			if (btn.className.indexOf("butActionRefused") === -1) {
+				btn.className = btn.className.replace("butAction", "butActionRefused");
+			}
+			btn.title = "'.dol_escape_js($langs->trans('SelectVendorFirst')).'";
+		}
 	}
 
 	if (typeof jQuery !== "undefined") {
@@ -248,13 +258,15 @@ if ($socid > 0) {
 }
 
 // -- View toggle: All Products vs Vendor's Products (JS-driven, no reload) --
+// Use <a> tags with butAction/butActionRefused — Dolibarr styles these correctly.
+// <button> elements inherit browser defaults that break Dolibarr's CSS.
 print '<div class="bulkrfq-view-toggle marginbottomonly">';
-print '<button type="button" id="bulkrfq-show-all" class="button butActionActive bulkrfq-toggle-btn">';
+print '<a href="#" id="bulkrfq-show-all" class="butAction bulkrfq-toggle-btn bulkrfq-active">';
 print '<span class="fa fa-list paddingright"></span>'.$langs->trans('ShowAllProducts');
-print '</button> ';
-print '<button type="button" id="bulkrfq-show-vendor" class="button butAction bulkrfq-toggle-btn" disabled>';
+print '</a> ';
+print '<a href="#" id="bulkrfq-show-vendor" class="butActionRefused classfortooltip bulkrfq-toggle-btn" title="'.$langs->trans('SelectVendorFirst').'">';
 print '<span class="fa fa-filter paddingright"></span>'.$langs->trans('ShowVendorProducts');
-print '</button>';
+print '</a>';
 print '</div>';
 print '<div id="bulkrfq-filter-info"></div>';
 
