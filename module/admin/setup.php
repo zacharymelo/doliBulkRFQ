@@ -45,7 +45,7 @@ print '<div class="opacitymedium">'.$langs->trans('BulkRfqAbout').'</div>';
 print '<br>';
 
 print '<table class="noborder centpercent">';
-print '<tr class="liste_titre"><td>'.$langs->trans('Parameter').'</td><td>'.$langs->trans('Value').'</td></tr>';
+print '<tr class="liste_titre"><td>'.$langs->trans('Parameter').'</td><td>'.$langs->trans('Value').'</td><td class="opacitymedium">'.$langs->trans('Description').'</td></tr>';
 
 // Supplier Proposal module status
 print '<tr class="oddeven"><td>'.$langs->trans('SupplierProposalModuleStatus').'</td><td>';
@@ -54,7 +54,14 @@ if (isModEnabled('supplier_proposal')) {
 } else {
 	print '<span class="badge badge-status8">'.$langs->trans('Disabled').'</span>';
 }
-print '</td></tr>';
+print '</td><td></td></tr>';
+
+// Debug mode
+print '<tr class="oddeven"><td>'.$langs->trans('DebugMode').'</td>';
+print '<td>';
+print ajax_constantonoff('BULKRFQ_DEBUG_MODE');
+print '</td>';
+print '<td class="opacitymedium">'.$langs->trans('DebugModeDesc').'</td></tr>';
 
 print '</table>';
 

@@ -52,3 +52,5 @@ ErrorAddingLine = Error adding line for product %s
 BulkRfqSetup = Bulk RFQ Setup
 BulkRfqAbout = This module adds a bulk product selection wizard for creating Supplier Price Requests. Select multiple products from a paginated list, specify quantities, choose a vendor, and create a draft Supplier Proposal in one action.
 SupplierProposalModuleStatus = Supplier Proposal Module
+DebugMode = Debug Mode
+DebugModeDesc = Enable the debug diagnostic endpoint at /custom/bulkrfq/ajax/debug.php (admin only)

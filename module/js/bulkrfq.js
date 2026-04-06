@@ -533,12 +533,21 @@
 			});
 		}
 
-		// Vendor selector change — enable/disable the vendor filter button
+		// Vendor selector change — enable/disable the vendor filter button.
+		// Dolibarr uses Select2 for company selectors, which fires select2:select
+		// and select2:clear events instead of native change. Bind both patterns.
 		var socidSelect = document.querySelector('select[name="socid"], input[name="socid"]');
 		if (socidSelect) {
+			// Native change (fallback)
 			socidSelect.addEventListener('change', function () {
 				updateVendorButtonState();
 			});
+			// Select2 events via jQuery (Dolibarr always loads jQuery)
+			if (typeof jQuery !== 'undefined') {
+				jQuery(document).on('select2:select select2:clear', '[name=socid]', function () {
+					updateVendorButtonState();
+				});
+			}
 		}
 	}
 
