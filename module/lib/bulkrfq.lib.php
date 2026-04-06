@@ -15,13 +15,15 @@
 
 /**
  * Fetch purchasable products with pagination, sorting, and search filters.
+ * Optionally filter to only products with a known supplier price for a given vendor.
  *
  * @param  DoliDB $db        Database handler
  * @param  string $sortfield Sort column (whitelisted)
  * @param  string $sortorder Sort direction ASC or DESC
  * @param  int    $limit     Max rows
  * @param  int    $offset    Row offset
- * @param  array  $filters   Associative array with optional keys: search_ref, search_label
+ * @param  array  $filters   Associative array with optional keys:
+ *                           search_ref, search_label, vendor_id (int, filter by vendor)
  * @return array             Array of stdClass product rows
  */
 function bulkrfqFetchProducts($db, $sortfield = 'p.ref', $sortorder = 'ASC', $limit = 25, $offset = 0, $filters = array())
@@ -31,13 +33,25 @@ function bulkrfqFetchProducts($db, $sortfield = 'p.ref', $sortorder = 'ASC', $li
 		'p.label'            => 'p.label',
 		'p.fk_product_type'  => 'p.fk_product_type',
 		'p.price'            => 'p.price',
+		'pfp.ref_fourn'      => 'pfp.ref_fourn',
+		'pfp.unitprice'      => 'pfp.unitprice',
 	);
 
 	$safe_sortfield = isset($allowed_sort[$sortfield]) ? $allowed_sort[$sortfield] : 'p.ref';
 	$safe_sortorder = strtoupper($sortorder) === 'DESC' ? 'DESC' : 'ASC';
 
+	$vendor_id = !empty($filters['vendor_id']) ? (int) $filters['vendor_id'] : 0;
+
 	$sql = "SELECT p.rowid, p.ref, p.label, p.fk_product_type, p.price, p.barcode, p.tva_tx";
+	if ($vendor_id > 0) {
+		$sql .= ", pfp.ref_fourn AS supplier_ref, pfp.unitprice AS supplier_price";
+	}
 	$sql .= " FROM ".MAIN_DB_PREFIX."product p";
+	if ($vendor_id > 0) {
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."product_fournisseur_price pfp ON pfp.fk_product = p.rowid";
+		$sql .= " AND pfp.fk_soc = ".$vendor_id;
+		$sql .= " AND pfp.entity IN (".getEntity('productsupplierprice').")";
+	}
 	$sql .= " WHERE p.tobuy = 1";
 	$sql .= " AND p.entity IN (".getEntity('product').")";
 
@@ -66,13 +80,21 @@ function bulkrfqFetchProducts($db, $sortfield = 'p.ref', $sortorder = 'ASC', $li
  * Count total purchasable products matching the given filters.
  *
  * @param  DoliDB $db      Database handler
- * @param  array  $filters Associative array with optional keys: search_ref, search_label
+ * @param  array  $filters Associative array with optional keys:
+ *                         search_ref, search_label, vendor_id (int)
  * @return int             Total count
  */
 function bulkrfqCountProducts($db, $filters = array())
 {
+	$vendor_id = !empty($filters['vendor_id']) ? (int) $filters['vendor_id'] : 0;
+
 	$sql = "SELECT COUNT(*) AS total";
 	$sql .= " FROM ".MAIN_DB_PREFIX."product p";
+	if ($vendor_id > 0) {
+		$sql .= " INNER JOIN ".MAIN_DB_PREFIX."product_fournisseur_price pfp ON pfp.fk_product = p.rowid";
+		$sql .= " AND pfp.fk_soc = ".$vendor_id;
+		$sql .= " AND pfp.entity IN (".getEntity('productsupplierprice').")";
+	}
 	$sql .= " WHERE p.tobuy = 1";
 	$sql .= " AND p.entity IN (".getEntity('product').")";
 

@@ -46,8 +46,9 @@ $sortfield   = GETPOST('sortfield', 'aZ09');
 $sortorder   = GETPOST('sortorder', 'aZ09');
 $page        = GETPOSTINT('page');
 $limit       = GETPOSTINT('limit') ? GETPOSTINT('limit') : (getDolGlobalInt('MAIN_SIZE_LISTE_LIMIT') ? getDolGlobalInt('MAIN_SIZE_LISTE_LIMIT') : 25);
-$search_ref  = GETPOST('search_ref', 'alpha');
+$search_ref   = GETPOST('search_ref', 'alpha');
 $search_label = GETPOST('search_label', 'alpha');
+$vendor_only  = GETPOSTINT('vendor_only');
 
 if (empty($sortfield)) {
 	$sortfield = 'p.ref';
@@ -189,6 +190,154 @@ print '</tr>';
 print '</table>';
 print '</div>';
 
+// -- Vendor filter toggle and product list --
+// Only apply vendor filter when vendor is selected AND toggle is on
+$effective_vendor_id = ($vendor_only && $socid > 0) ? $socid : 0;
+
+$filters = array(
+	'search_ref'   => $search_ref,
+	'search_label' => $search_label,
+	'vendor_id'    => $effective_vendor_id,
+);
+
+$nbtotalofrecords = bulkrfqCountProducts($db, $filters);
+$products = bulkrfqFetchProducts($db, $sortfield, $sortorder, $limit, $offset, $filters);
+
+$param = '';
+if (!empty($search_ref)) {
+	$param .= '&search_ref='.urlencode($search_ref);
+}
+if (!empty($search_label)) {
+	$param .= '&search_label='.urlencode($search_label);
+}
+if ($socid > 0) {
+	$param .= '&socid='.$socid;
+}
+if ($vendor_only) {
+	$param .= '&vendor_only=1';
+}
+
+print '<form method="GET" action="'.$_SERVER['PHP_SELF'].'" id="bulkrfq-search-form">';
+if ($socid > 0) {
+	print '<input type="hidden" name="socid" value="'.$socid.'">';
+}
+print '<input type="hidden" name="vendor_only" value="'.$vendor_only.'" id="bulkrfq-vendor-only-input">';
+
+// -- View toggle: All Products vs Vendor's Products --
+print '<div class="bulkrfq-view-toggle marginbottomonly">';
+$all_class = $vendor_only ? 'butAction' : 'butActionActive';
+$vendor_class = $vendor_only ? 'butActionActive' : 'butAction';
+$toggle_base = $_SERVER['PHP_SELF'].'?socid='.$socid;
+if (!empty($search_ref)) {
+	$toggle_base .= '&search_ref='.urlencode($search_ref);
+}
+if (!empty($search_label)) {
+	$toggle_base .= '&search_label='.urlencode($search_label);
+}
+print '<a href="'.$toggle_base.'&vendor_only=0" class="button '.$all_class.' bulkrfq-toggle-btn">';
+print '<span class="fa fa-list paddingright"></span>'.$langs->trans('ShowAllProducts');
+print '</a> ';
+if ($socid > 0) {
+	print '<a href="'.$toggle_base.'&vendor_only=1" class="button '.$vendor_class.' bulkrfq-toggle-btn">';
+	print '<span class="fa fa-filter paddingright"></span>'.$langs->trans('ShowVendorProducts');
+	print '</a>';
+} else {
+	print '<span class="button butActionRefused classfortooltip bulkrfq-toggle-btn" title="'.$langs->trans('SelectVendorFirst').'">';
+	print '<span class="fa fa-filter paddingright"></span>'.$langs->trans('ShowVendorProducts');
+	print '</span>';
+}
+print '</div>';
+
+// Info banner
+if ($effective_vendor_id > 0) {
+	print '<div class="info bulkrfq-filter-info">'.$langs->trans('VendorFilterInfo').'</div>';
+}
+
+print_barre_liste(
+	$langs->trans('Products'),
+	$page,
+	$_SERVER['PHP_SELF'],
+	$param,
+	$sortfield,
+	$sortorder,
+	'',
+	count($products),
+	$nbtotalofrecords,
+	'product',
+	0,
+	'',
+	'',
+	$limit,
+	0,
+	0,
+	1
+);
+
+print '<table class="noborder centpercent">';
+
+// Column count for colspan
+$colspan = $effective_vendor_id > 0 ? 9 : 7;
+
+// Column headers
+print '<tr class="liste_titre">';
+print '<th class="center" width="30"><input type="checkbox" id="bulkrfq-select-all" title="'.$langs->trans('SelectAll').'"></th>';
+print_liste_field_titre($langs->trans('ProductRef'), $_SERVER['PHP_SELF'], 'p.ref', '', $param, '', $sortfield, $sortorder);
+print_liste_field_titre($langs->trans('ProductLabel'), $_SERVER['PHP_SELF'], 'p.label', '', $param, '', $sortfield, $sortorder);
+print_liste_field_titre($langs->trans('ProductType'), $_SERVER['PHP_SELF'], 'p.fk_product_type', '', $param, '', $sortfield, $sortorder);
+print '<th>'.$langs->trans('Barcode').'</th>';
+if ($effective_vendor_id > 0) {
+	print_liste_field_titre($langs->trans('SupplierRef'), $_SERVER['PHP_SELF'], 'pfp.ref_fourn', '', $param, '', $sortfield, $sortorder);
+	print_liste_field_titre($langs->trans('SupplierPrice'), $_SERVER['PHP_SELF'], 'pfp.unitprice', '', $param, 'class="right"', $sortfield, $sortorder);
+}
+print_liste_field_titre($langs->trans('BuyPrice'), $_SERVER['PHP_SELF'], 'p.price', '', $param, 'class="right"', $sortfield, $sortorder);
+print '<th class="right">'.$langs->trans('Qty').'</th>';
+print '</tr>';
+
+// Search filter row
+print '<tr class="liste_titre">';
+print '<td></td>';
+print '<td><input type="text" name="search_ref" value="'.dol_escape_htmltag($search_ref).'" class="maxwidth100" placeholder="..."></td>';
+print '<td><input type="text" name="search_label" value="'.dol_escape_htmltag($search_label).'" class="maxwidth150" placeholder="..."></td>';
+print '<td></td>';
+print '<td></td>';
+if ($effective_vendor_id > 0) {
+	print '<td></td>';
+	print '<td></td>';
+}
+print '<td></td>';
+print '<td class="right"><button type="submit" class="liste_titre button_search" name="button_search" value="x"><span class="fa fa-search"></span></button>';
+print ' <button type="submit" class="liste_titre button_removefilter" name="button_removefilter" value="x"><span class="fa fa-remove"></span></button></td>';
+print '</tr>';
+
+// Product rows
+if (!empty($products)) {
+	foreach ($products as $prod) {
+		$product_type_label = ($prod->fk_product_type == 1) ? $langs->trans('Service') : $langs->trans('Product');
+		$product_url = DOL_URL_ROOT.'/product/card.php?id='.$prod->rowid;
+
+		print '<tr class="oddeven">';
+		print '<td class="center">';
+		print '<input type="checkbox" class="bulkrfq-select" data-product-id="'.$prod->rowid.'" data-product-ref="'.dol_escape_htmltag($prod->ref).'" data-product-label="'.dol_escape_htmltag($prod->label).'">';
+		print '</td>';
+		print '<td><a href="'.$product_url.'" target="_blank">'.dol_escape_htmltag($prod->ref).'</a></td>';
+		print '<td>'.dol_escape_htmltag($prod->label).'</td>';
+		print '<td>'.$product_type_label.'</td>';
+		print '<td>'.dol_escape_htmltag($prod->barcode).'</td>';
+		if ($effective_vendor_id > 0) {
+			print '<td>'.dol_escape_htmltag(isset($prod->supplier_ref) ? $prod->supplier_ref : '').'</td>';
+			print '<td class="right">'.(isset($prod->supplier_price) ? price($prod->supplier_price) : '').'</td>';
+		}
+		print '<td class="right">'.price($prod->price).'</td>';
+		print '<td class="right"><input type="number" class="bulkrfq-qty flat right" data-product-id="'.$prod->rowid.'" value="1" step="any" min="0.01" style="width:70px;"></td>';
+		print '</tr>';
+	}
+} else {
+	print '<tr class="oddeven"><td colspan="'.$colspan.'" class="opacitymedium">'.$langs->trans('NoRecordFound').'</td></tr>';
+}
+
+print '</table>';
+print '</form>';
+
 // -- Staging area --
 print '<div id="bulkrfq-staging" class="bulkrfq-staging">';
 print '<div id="bulkrfq-staging-empty" class="bulkrfq-staging-empty opacitymedium">';
@@ -216,101 +365,6 @@ print '<div id="bulkrfq-create-wrapper" class="bulkrfq-create-wrapper" style="di
 print '<button type="button" id="bulkrfq-create-btn" class="button butAction">'.$langs->trans('CreatePriceRequest').'</button>';
 print '</div>';
 
-print '</form>';
-
-// -- Search filters and product list (GET-based pagination) --
-$filters = array(
-	'search_ref'   => $search_ref,
-	'search_label' => $search_label,
-);
-
-$nbtotalofrecords = bulkrfqCountProducts($db, $filters);
-$products = bulkrfqFetchProducts($db, $sortfield, $sortorder, $limit, $offset, $filters);
-
-$param = '';
-if (!empty($search_ref)) {
-	$param .= '&search_ref='.urlencode($search_ref);
-}
-if (!empty($search_label)) {
-	$param .= '&search_label='.urlencode($search_label);
-}
-if ($socid > 0) {
-	$param .= '&socid='.$socid;
-}
-
-print '<form method="GET" action="'.$_SERVER['PHP_SELF'].'" id="bulkrfq-search-form">';
-if ($socid > 0) {
-	print '<input type="hidden" name="socid" value="'.$socid.'">';
-}
-
-print_barre_liste(
-	$langs->trans('Products'),
-	$page,
-	$_SERVER['PHP_SELF'],
-	$param,
-	$sortfield,
-	$sortorder,
-	'',
-	count($products),
-	$nbtotalofrecords,
-	'product',
-	0,
-	'',
-	'',
-	$limit,
-	0,
-	0,
-	1
-);
-
-print '<table class="noborder centpercent">';
-
-// Column headers
-print '<tr class="liste_titre">';
-print '<th class="center" width="30"><input type="checkbox" id="bulkrfq-select-all" title="'.$langs->trans('SelectAll').'"></th>';
-print_liste_field_titre($langs->trans('ProductRef'), $_SERVER['PHP_SELF'], 'p.ref', '', $param, '', $sortfield, $sortorder);
-print_liste_field_titre($langs->trans('ProductLabel'), $_SERVER['PHP_SELF'], 'p.label', '', $param, '', $sortfield, $sortorder);
-print_liste_field_titre($langs->trans('ProductType'), $_SERVER['PHP_SELF'], 'p.fk_product_type', '', $param, '', $sortfield, $sortorder);
-print '<th>'.$langs->trans('Barcode').'</th>';
-print_liste_field_titre($langs->trans('BuyPrice'), $_SERVER['PHP_SELF'], 'p.price', '', $param, 'class="right"', $sortfield, $sortorder);
-print '<th class="right">'.$langs->trans('Qty').'</th>';
-print '</tr>';
-
-// Search filter row
-print '<tr class="liste_titre">';
-print '<td></td>';
-print '<td><input type="text" name="search_ref" value="'.dol_escape_htmltag($search_ref).'" class="maxwidth100" placeholder="..."></td>';
-print '<td><input type="text" name="search_label" value="'.dol_escape_htmltag($search_label).'" class="maxwidth150" placeholder="..."></td>';
-print '<td></td>';
-print '<td></td>';
-print '<td></td>';
-print '<td class="right"><button type="submit" class="liste_titre button_search" name="button_search" value="x"><span class="fa fa-search"></span></button>';
-print ' <button type="submit" class="liste_titre button_removefilter" name="button_removefilter" value="x"><span class="fa fa-remove"></span></button></td>';
-print '</tr>';
-
-// Product rows
-if (!empty($products)) {
-	foreach ($products as $prod) {
-		$product_type_label = ($prod->fk_product_type == 1) ? $langs->trans('Service') : $langs->trans('Product');
-		$product_url = DOL_URL_ROOT.'/product/card.php?id='.$prod->rowid;
-
-		print '<tr class="oddeven">';
-		print '<td class="center">';
-		print '<input type="checkbox" class="bulkrfq-select" data-product-id="'.$prod->rowid.'" data-product-ref="'.dol_escape_htmltag($prod->ref).'" data-product-label="'.dol_escape_htmltag($prod->label).'">';
-		print '</td>';
-		print '<td><a href="'.$product_url.'" target="_blank">'.dol_escape_htmltag($prod->ref).'</a></td>';
-		print '<td>'.dol_escape_htmltag($prod->label).'</td>';
-		print '<td>'.$product_type_label.'</td>';
-		print '<td>'.dol_escape_htmltag($prod->barcode).'</td>';
-		print '<td class="right">'.price($prod->price).'</td>';
-		print '<td class="right"><input type="number" class="bulkrfq-qty flat right" data-product-id="'.$prod->rowid.'" value="1" step="any" min="0.01" style="width:70px;"></td>';
-		print '</tr>';
-	}
-} else {
-	print '<tr class="oddeven"><td colspan="7" class="opacitymedium">'.$langs->trans('NoRecordFound').'</td></tr>';
-}
-
-print '</table>';
 print '</form>';
 
 llxFooter();

@@ -25,6 +25,15 @@ Barcode = Barcode
 BuyPrice = Buy Price
 Qty = Qty
 SelectAll = Select All
+SupplierRef = Supplier Ref
+SupplierPrice = Supplier Price
+
+# Vendor filter
+ShowAllProducts = All Products
+ShowVendorProducts = Vendor's Products Only
+VendorFilterInfo = Showing only products with a known price from the selected vendor
+AllProductsInfo = Showing all purchasable products
+SelectVendorFirst = Select a vendor above to filter by vendor products
 
 # Actions
 CreatePriceRequest = Create Price Request
