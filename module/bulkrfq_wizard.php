@@ -207,8 +207,12 @@ if ($action == 'create_proposal' && $user->hasRight('supplier_proposal', 'creer'
  * View
  */
 $title = $langs->trans('BulkPriceRequestTitle');
-$morejs = array('/bulkrfq/js/bulkrfq.js');
-$morecss = array('/bulkrfq/css/bulkrfq.css');
+// Cache-bust JS/CSS with module version to prevent stale browser caches
+dol_include_once('/bulkrfq/core/modules/modBulkrfq.class.php');
+$bulkrfq_mod = new modBulkrfq($db);
+$bulkrfq_ver = $bulkrfq_mod->version;
+$morejs = array('/bulkrfq/js/bulkrfq.js?v='.$bulkrfq_ver);
+$morecss = array('/bulkrfq/css/bulkrfq.css?v='.$bulkrfq_ver);
 
 llxHeader('', $title, '', '', 0, 0, $morejs, $morecss);
 
