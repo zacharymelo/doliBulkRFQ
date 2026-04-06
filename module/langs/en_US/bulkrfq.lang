@@ -1,0 +1,45 @@
+# Module descriptor
+Module510300Name = Bulk RFQ
+Module510300Desc = Bulk product selection wizard for creating Supplier Price Requests
+
+# Menu
+BulkPriceRequest = Bulk Price Request
+
+# Page titles
+BulkPriceRequestTitle = Bulk Price Request — Select Products
+
+# Vendor selector
+SelectVendor = Select Vendor (Supplier)
+
+# Staging area
+SelectedProducts = Selected Products
+NoProductsSelected = No products selected. Use the checkboxes below to add products.
+ProductsSelectedCount = %s product(s) selected
+ClearAll = Clear All
+
+# Product list
+ProductRef = Product Ref
+ProductLabel = Label
+ProductType = Type
+Barcode = Barcode
+BuyPrice = Buy Price
+Qty = Qty
+SelectAll = Select All
+
+# Actions
+CreatePriceRequest = Create Price Request
+CreatingPriceRequest = Creating price request...
+
+# Success / Error
+ProposalCreatedSuccess = Supplier price request %s created successfully with %s line(s)
+ErrorNoVendorSelected = Please select a vendor before creating the price request
+ErrorNoProductsSelected = Please select at least one product
+ErrorVendorNotSupplier = The selected third-party is not a supplier
+ErrorProductNotPurchasable = Product ID %s is not purchasable (tobuy=0)
+ErrorCreatingProposal = Error creating supplier price request
+ErrorAddingLine = Error adding line for product %s
+
+# Admin
+BulkRfqSetup = Bulk RFQ Setup
+BulkRfqAbout = This module adds a bulk product selection wizard for creating Supplier Price Requests. Select multiple products from a paginated list, specify quantities, choose a vendor, and create a draft Supplier Proposal in one action.
+SupplierProposalModuleStatus = Supplier Proposal Module

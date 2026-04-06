@@ -1,0 +1,40 @@
+/* Bulk RFQ module styles */
+
+.bulkrfq-staging {
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	padding: 12px 16px;
+	margin: 12px 0;
+	background: #fafafa;
+}
+
+.bulkrfq-staging-empty {
+	font-style: italic;
+	padding: 8px 0;
+}
+
+.bulkrfq-staging-header {
+	margin-bottom: 8px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.bulkrfq-clear-link {
+	font-size: 0.85em;
+	color: #bc3434;
+}
+
+.bulkrfq-clear-link:hover {
+	text-decoration: underline;
+}
+
+.bulkrfq-create-wrapper {
+	margin: 12px 0 20px 0;
+}
+
+.bulkrfq-qty,
+.bulkrfq-staging-qty {
+	width: 70px;
+	text-align: right;
+}
