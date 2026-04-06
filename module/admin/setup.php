@@ -121,7 +121,7 @@ print '<ul id="bulkrfq-priority-list" class="bulkrfq-sortable">';
 foreach ($current_priority as $i => $src) {
 	$label = isset($source_labels[$src]) ? $source_labels[$src] : $src;
 	print '<li data-source="'.dol_escape_htmltag($src).'" class="bulkrfq-sortable-item">';
-	print '<span class="fa fa-arrows-v bulkrfq-drag-handle opacitymedium"></span> ';
+	print '<span class="fas fa-grip-vertical bulkrfq-drag-handle"></span> ';
 	print '<span class="bulkrfq-priority-num">'.($i + 1).'.</span> ';
 	print dol_escape_htmltag($label);
 	print '</li>';
@@ -150,10 +150,10 @@ print '</form>';
 print '<script>
 jQuery(function() {
 	jQuery("#bulkrfq-priority-list").sortable({
-		handle: ".bulkrfq-drag-handle",
 		axis: "y",
 		containment: "parent",
 		tolerance: "pointer",
+		cursor: "grabbing",
 		update: function() {
 			var order = [];
 			jQuery("#bulkrfq-priority-list li").each(function(i) {
@@ -191,7 +191,7 @@ print '<style>
 	height: 36px;
 	margin: 4px 0;
 }
-.bulkrfq-drag-handle { cursor: grab; margin-right: 6px; }
+.bulkrfq-drag-handle { color: #aaa; margin-right: 8px; }
 .bulkrfq-priority-num { font-weight: bold; min-width: 20px; display: inline-block; }
 </style>';
 
