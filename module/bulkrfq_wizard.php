@@ -36,8 +36,8 @@ dol_include_once('/bulkrfq/lib/bulkrfq.lib.php');
 
 $langs->loadLangs(array('products', 'supplier_proposal', 'bulkrfq@bulkrfq'));
 
-// Permission check
-restrictedArea($user, 'supplier_proposal', 0, '', 'creer');
+// Permission check — read access to view the page; create checked on POST action
+restrictedArea($user, 'supplier_proposal');
 
 // Parameters
 $action      = GETPOST('action', 'aZ09');
