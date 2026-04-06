@@ -46,12 +46,15 @@ if ($action == 'update') {
 	$val = GETPOST('BULKRFQ_DEBUG_MODE', 'alpha');
 	dolibarr_set_const($db, 'BULKRFQ_DEBUG_MODE', $val, 'chaine', 0, '', $conf->entity);
 
-	// Price priority — build comma-separated string from the 4 selects
+	// Price priority — read comma-separated order from hidden input
+	$raw_order = GETPOST('price_priority_order', 'alpha');
 	$priority = array();
-	for ($i = 1; $i <= 4; $i++) {
-		$src = GETPOST('price_priority_'.$i, 'aZ09');
-		if (in_array($src, $valid_sources) && !in_array($src, $priority)) {
-			$priority[] = $src;
+	if (!empty($raw_order)) {
+		foreach (explode(',', $raw_order) as $src) {
+			$src = trim($src);
+			if (in_array($src, $valid_sources) && !in_array($src, $priority)) {
+				$priority[] = $src;
+			}
 		}
 	}
 	// Append any sources the user omitted (safety net)
@@ -110,22 +113,20 @@ if (isModEnabled('supplier_proposal')) {
 }
 print '</td><td></td></tr>';
 
-// Price priority
+// Price priority — drag-and-drop sortable list
 print '<tr class="oddeven"><td>'.$langs->trans('PricePriority').'</td>';
 print '<td>';
-for ($i = 0; $i < 4; $i++) {
-	$pos = $i + 1;
-	$selected = isset($current_priority[$i]) ? $current_priority[$i] : '';
-	print '<div class="inline-block marginrightonly">';
-	print '<span class="opacitymedium small">'.$pos.'.</span> ';
-	print '<select name="price_priority_'.$pos.'" class="flat minwidth200">';
-	foreach ($valid_sources as $src) {
-		$sel = ($selected === $src) ? ' selected' : '';
-		print '<option value="'.$src.'"'.$sel.'>'.dol_escape_htmltag($source_labels[$src]).'</option>';
-	}
-	print '</select>';
-	print '</div><br>';
+print '<input type="hidden" name="price_priority_order" id="bulkrfq-priority-order" value="'.dol_escape_htmltag(implode(',', $current_priority)).'">';
+print '<ul id="bulkrfq-priority-list" class="bulkrfq-sortable">';
+foreach ($current_priority as $i => $src) {
+	$label = isset($source_labels[$src]) ? $source_labels[$src] : $src;
+	print '<li data-source="'.dol_escape_htmltag($src).'" class="bulkrfq-sortable-item">';
+	print '<span class="fa fa-arrows-v bulkrfq-drag-handle opacitymedium"></span> ';
+	print '<span class="bulkrfq-priority-num">'.($i + 1).'.</span> ';
+	print dol_escape_htmltag($label);
+	print '</li>';
 }
+print '</ul>';
 print '</td>';
 print '<td class="opacitymedium">'.$langs->trans('PricePriorityDesc').'</td></tr>';
 
@@ -144,6 +145,55 @@ print '<input type="submit" class="button button-save" value="'.$langs->trans('S
 print '</div>';
 
 print '</form>';
+
+// Inline JS for sortable list (jQuery UI is bundled with Dolibarr)
+print '<script>
+jQuery(function() {
+	jQuery("#bulkrfq-priority-list").sortable({
+		handle: ".bulkrfq-drag-handle",
+		axis: "y",
+		containment: "parent",
+		tolerance: "pointer",
+		update: function() {
+			var order = [];
+			jQuery("#bulkrfq-priority-list li").each(function(i) {
+				order.push(jQuery(this).data("source"));
+				jQuery(this).find(".bulkrfq-priority-num").text((i + 1) + ".");
+			});
+			jQuery("#bulkrfq-priority-order").val(order.join(","));
+		}
+	});
+});
+</script>';
+
+// Inline CSS for sortable list
+print '<style>
+.bulkrfq-sortable { list-style: none; padding: 0; margin: 0; max-width: 340px; }
+.bulkrfq-sortable-item {
+	padding: 8px 12px;
+	margin: 4px 0;
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	cursor: grab;
+	font-size: 0.95em;
+	user-select: none;
+}
+.bulkrfq-sortable-item:active { cursor: grabbing; }
+.bulkrfq-sortable-item.ui-sortable-helper {
+	box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+	background: #f8f8ff;
+}
+.bulkrfq-sortable .ui-sortable-placeholder {
+	border: 2px dashed #aaa;
+	background: #f5f5f5;
+	visibility: visible !important;
+	height: 36px;
+	margin: 4px 0;
+}
+.bulkrfq-drag-handle { cursor: grab; margin-right: 6px; }
+.bulkrfq-priority-num { font-weight: bold; min-width: 20px; display: inline-block; }
+</style>';
 
 llxFooter();
 $db->close();
