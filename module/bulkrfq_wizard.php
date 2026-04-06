@@ -82,11 +82,6 @@ if ($action == 'create_proposal' && $user->hasRight('supplier_proposal', 'creer'
 	// Options
 	$include_prices = GETPOSTINT('include_prices');
 
-	// TEMP DEBUG: force include_prices and log what we received
-	if (getDolGlobalString('BULKRFQ_DEBUG_MODE')) {
-		setEventMessages('Debug POST: include_prices='.$include_prices.' socid='.$socid.' raw='.GETPOST('include_prices', 'alpha'), null, 'warnings');
-	}
-
 	// Decode selected products
 	$selected_json = GETPOST('selected_products', 'restricthtml');
 	$selections = array();
@@ -172,11 +167,6 @@ if ($action == 'create_proposal' && $user->hasRight('supplier_proposal', 'creer'
 					}
 				}
 
-				// Debug: trace price resolution per line
-				if (getDolGlobalString('BULKRFQ_DEBUG_MODE') && $include_prices) {
-					dol_syslog('BulkRFQ price debug: product='.$product_id.' pu_ht='.$pu_ht.' include_prices='.$include_prices.' socid='.$socid, LOG_WARNING);
-				}
-
 				$addline_result = $proposal->addline(
 					$desc,          // description
 					$pu_ht,         // pu_ht
@@ -229,15 +219,20 @@ print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'" id="bulkrfq-form">'
 print '<input type="hidden" name="token" value="'.newToken().'">';
 print '<input type="hidden" name="action" value="">';
 print '<input type="hidden" name="selected_products" value="" id="bulkrfq-selected-input">';
-print '<input type="hidden" name="include_prices" value="0" id="bulkrfq-include-prices-input">';
-
-// -- Vendor selector --
+// -- Vendor selector and options --
 print '<div class="fichecenter">';
 print '<table class="border centpercent tableforfieldcreate">';
 print '<tr>';
 print '<td class="titlefieldcreate fieldrequired">'.$langs->trans('SelectVendor').'</td>';
 print '<td>';
 print $form->select_company($socid, 'socid', 's.fournisseur=1', 'SelectThirdParty', 0, 0, array(), 0, 'minwidth300 maxwidth500');
+print '</td>';
+print '</tr>';
+print '<tr>';
+print '<td class="titlefieldcreate">'.$langs->trans('IncludeBuyPrices').'</td>';
+print '<td>';
+print '<input type="checkbox" name="include_prices" id="bulkrfq-include-prices" value="1"> ';
+print '<span class="opacitymedium small">'.$langs->trans('IncludeBuyPricesDesc').'</span>';
 print '</td>';
 print '</tr>';
 print '</table>';
@@ -425,13 +420,8 @@ print '</table>';
 print '</div>';
 print '</div>';
 
-// -- Create options and button --
+// -- Create button --
 print '<div id="bulkrfq-create-wrapper" class="bulkrfq-create-wrapper" style="display:none;">';
-print '<div class="bulkrfq-create-options marginbottomonly">';
-print '<input type="checkbox" id="bulkrfq-include-prices" name="include_prices" value="1"> ';
-print '<label for="bulkrfq-include-prices">'.$langs->trans('IncludeBuyPrices').'</label>';
-print ' <span class="opacitymedium small">('.$langs->trans('IncludeBuyPricesDesc').')</span>';
-print '</div>';
 print '<a href="#" id="bulkrfq-create-btn" class="butAction">'.$langs->trans('CreatePriceRequest').'</a>';
 print '</div>';
 

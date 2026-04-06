@@ -503,13 +503,6 @@
 				document.getElementById('bulkrfq-selected-input').value = JSON.stringify(selections);
 				form.querySelector('input[name="action"]').value = 'create_proposal';
 
-				// Sync include_prices checkbox to hidden input (checkbox is outside the POST form due to nested forms)
-				var pricesCb = document.getElementById('bulkrfq-include-prices');
-				var pricesInput = document.getElementById('bulkrfq-include-prices-input');
-				if (pricesInput && pricesCb) {
-					pricesInput.value = pricesCb.checked ? '1' : '0';
-				}
-
 				// Clear sessionStorage so it doesn't persist after successful creation
 				sessionStorage.removeItem(STORAGE_KEY);
 
