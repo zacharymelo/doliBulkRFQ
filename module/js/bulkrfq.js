@@ -347,6 +347,23 @@
 		}
 	}
 
+	/* ---- Callbacks for inline vendor change script ---- */
+
+	// Called when vendor changes while vendor filter is active — refresh table
+	window.bulkrfqRefreshVendorFilter = function (socid) {
+		if (vendorFilterActive && socid > 0) {
+			fetchAndRebuildTable(socid);
+		}
+	};
+
+	// Called when vendor is cleared — switch back to all products
+	window.bulkrfqResetToAll = function () {
+		if (vendorFilterActive) {
+			setToggleState(false);
+			fetchAndRebuildTable(0);
+		}
+	};
+
 	/* ---- Event binding ---- */
 
 	function init() {

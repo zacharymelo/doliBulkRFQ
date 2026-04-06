@@ -200,12 +200,17 @@ print '<script>(function() {
 		if (socid > 0) {
 			btn.className = btn.className.replace("butActionRefused", "butAction");
 			btn.title = "";
-		} else {
-			btn.className = btn.className.replace("butAction", "butActionRefused");
-			if (btn.className.indexOf("butActionRefused") === -1) {
-				btn.className = btn.className.replace("butAction", "butActionRefused");
+			// If vendor filter is active, auto-refresh table for the new vendor
+			if (typeof window.bulkrfqRefreshVendorFilter === "function") {
+				window.bulkrfqRefreshVendorFilter(socid);
 			}
+		} else {
+			btn.className = btn.className.replace(/butAction(Active)?/g, "butActionRefused");
 			btn.title = "'.dol_escape_js($langs->trans('SelectVendorFirst')).'";
+			// Vendor cleared — switch back to all products if filter was active
+			if (typeof window.bulkrfqResetToAll === "function") {
+				window.bulkrfqResetToAll();
+			}
 		}
 	}
 
