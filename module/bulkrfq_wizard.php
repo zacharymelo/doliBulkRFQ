@@ -32,6 +32,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/class/html.formother.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/supplier_proposal/class/supplier_proposal.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+require_once DOL_DOCUMENT_ROOT.'/fourn/class/fournisseur.product.class.php';
 dol_include_once('/bulkrfq/lib/bulkrfq.lib.php');
 
 $langs->loadLangs(array('products', 'supplier_proposal', 'bulkrfq@bulkrfq'));
@@ -128,9 +129,30 @@ if ($action == 'create_proposal' && $user->hasRight('supplier_proposal', 'creer'
 				$desc = $product_obj->ref.' - '.$product_obj->label;
 
 				// Use product buy price if checkbox checked, otherwise 0
-				$pu_ht = $include_prices ? (float) $product_obj->cost_price : 0;
-				if ($include_prices && empty($pu_ht)) {
-					$pu_ht = (float) $product_obj->pmp;
+				// Fallback chain: vendor-specific supplier price → any best supplier price → cost_price → pmp
+				$pu_ht = 0;
+				if ($include_prices) {
+					// 1. Check vendor-specific supplier price
+					$prodfourn = new ProductFournisseur($db);
+					$result_pf = $prodfourn->find_min_price_product_fournisseur($product_id, 0, $socid);
+					if ($result_pf > 0 && !empty($prodfourn->fourn_unitprice)) {
+						$pu_ht = (float) $prodfourn->fourn_unitprice;
+					}
+					// 2. Any supplier price (any vendor)
+					if (empty($pu_ht)) {
+						$result_pf = $prodfourn->find_min_price_product_fournisseur($product_id, 0, 0);
+						if ($result_pf > 0 && !empty($prodfourn->fourn_unitprice)) {
+							$pu_ht = (float) $prodfourn->fourn_unitprice;
+						}
+					}
+					// 3. Cost price
+					if (empty($pu_ht) && !empty($product_obj->cost_price)) {
+						$pu_ht = (float) $product_obj->cost_price;
+					}
+					// 4. PMP / WAP
+					if (empty($pu_ht) && !empty($product_obj->pmp)) {
+						$pu_ht = (float) $product_obj->pmp;
+					}
 				}
 
 				$addline_result = $proposal->addline(
