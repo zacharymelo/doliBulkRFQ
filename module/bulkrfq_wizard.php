@@ -185,6 +185,7 @@ print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'" id="bulkrfq-form">'
 print '<input type="hidden" name="token" value="'.newToken().'">';
 print '<input type="hidden" name="action" value="">';
 print '<input type="hidden" name="selected_products" value="" id="bulkrfq-selected-input">';
+print '<input type="hidden" name="include_prices" value="0" id="bulkrfq-include-prices-input">';
 
 // -- Vendor selector --
 print '<div class="fichecenter">';
