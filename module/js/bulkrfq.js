@@ -54,6 +54,7 @@
 		if (createWrapper) {
 			createWrapper.style.display = '';
 		}
+		updateCreateButtonState();
 		countEl.textContent = count + ' product(s) selected';
 
 		// Build table body
@@ -290,6 +291,27 @@
 		return num.toFixed(2);
 	}
 
+	/* ---- Create button gating ---- */
+
+	function updateCreateButtonState() {
+		var btn = document.getElementById('bulkrfq-create-btn');
+		if (!btn) {
+			return;
+		}
+		var socid = getSelectedVendorId();
+		if (socid > 0) {
+			btn.className = btn.className.replace('butActionRefused', 'butAction');
+			btn.classList.remove('classfortooltip');
+			btn.title = '';
+		} else {
+			btn.className = btn.className.replace(/\bbutAction\b(?!Refused)/g, 'butActionRefused');
+			btn.classList.add('classfortooltip');
+			btn.title = (window.bulkrfqConfig && window.bulkrfqConfig.labelSelectVendorFirst) || 'Select a vendor first';
+		}
+	}
+
+	window.bulkrfqUpdateCreateBtn = updateCreateButtonState;
+
 	/* ---- Toggle button state ---- */
 
 	// Dolibarr uses butAction (clickable), butActionActive (current), butActionRefused (disabled)
@@ -483,6 +505,10 @@
 			// Create button
 			if (e.target.id === 'bulkrfq-create-btn' || e.target.closest('#bulkrfq-create-btn')) {
 				e.preventDefault();
+				var createBtn = document.getElementById('bulkrfq-create-btn');
+				if (createBtn && createBtn.className.indexOf('butActionRefused') !== -1) {
+					return;
+				}
 				store = loadStore();
 				if (storeCount(store) === 0) {
 					alert('No products selected.');

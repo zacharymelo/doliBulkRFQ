@@ -229,7 +229,11 @@ print '<table class="border centpercent tableforfieldcreate">';
 print '<tr>';
 print '<td class="titlefieldcreate fieldrequired">'.$langs->trans('SelectVendor').'</td>';
 print '<td>';
-print $form->select_company($socid, 'socid', 's.fournisseur=1', 'SelectThirdParty', 0, 0, array(), 0, 'minwidth300 maxwidth500');
+$filter = '((s.fournisseur:=:1) AND (s.status:=:1))';
+print img_picto('', 'company', 'class="pictofixedwidth"');
+print $form->select_company($socid, 'socid', $filter, 'SelectThirdParty', 0, 0, array(), 0, 'minwidth300 maxwidth500 widthcentpercentminusxx');
+print ' <a href="'.DOL_URL_ROOT.'/societe/card.php?action=create&client=0&fournisseur=1&backtopage='.urlencode($_SERVER["PHP_SELF"]).'">';
+print '<span class="fa fa-plus-circle valignmiddle paddingleft" title="'.$langs->trans("AddThirdParty").'"></span></a>';
 print '</td>';
 print '</tr>';
 print '<tr>';
@@ -264,6 +268,10 @@ print '<script>(function() {
 			if (typeof window.bulkrfqResetToAll === "function") {
 				window.bulkrfqResetToAll();
 			}
+		}
+		// Update create button gating
+		if (typeof window.bulkrfqUpdateCreateBtn === "function") {
+			window.bulkrfqUpdateCreateBtn();
 		}
 	}
 
@@ -315,7 +323,8 @@ print 'labelProduct: "'.dol_escape_js($langs->trans('Product')).'",';
 print 'labelService: "'.dol_escape_js($langs->trans('Service')).'",';
 print 'labelNoRecords: "'.dol_escape_js($langs->trans('NoRecordFound')).'",';
 print 'labelVendorInfo: "'.dol_escape_js($langs->trans('VendorFilterInfo')).'",';
-print 'labelAllInfo: "'.dol_escape_js($langs->trans('AllProductsInfo')).'"';
+print 'labelAllInfo: "'.dol_escape_js($langs->trans('AllProductsInfo')).'",';
+print 'labelSelectVendorFirst: "'.dol_escape_js($langs->trans('SelectVendorFirst')).'"';
 print '};</script>';
 
 print '<form method="GET" action="'.$_SERVER['PHP_SELF'].'" id="bulkrfq-search-form">';
