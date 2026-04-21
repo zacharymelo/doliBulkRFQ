@@ -18,14 +18,12 @@ ProductsSelectedCount = %s product(s) selected
 ClearAll = Clear All
 
 # Product list
-ProductRef = Product Ref
-ProductLabel = Label
-ProductType = Type
+RfqProductRef = Product Ref
+RfqProductLabel = Label
+RfqProductType = Type
 Barcode = Barcode
 BuyPrice = Buy Price
-Qty = Qty
-SelectAll = Select All
-SupplierRef = Supplier Ref
+RfqSupplierRef = Supplier Ref
 SupplierPrice = Supplier Price
 
 # Vendor filter

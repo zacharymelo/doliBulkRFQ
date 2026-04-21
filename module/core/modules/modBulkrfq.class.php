@@ -32,7 +32,7 @@ class modBulkrfq extends DolibarrModules
 		$this->module_position = '90';
 		$this->name = preg_replace('/^mod/i', '', get_class($this));
 		$this->description = 'Bulk product selection wizard for creating Supplier Price Requests';
-		$this->version = '1.2.5';
+		$this->version = '1.2.6';
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 		$this->picto = 'supplier_proposal';
 

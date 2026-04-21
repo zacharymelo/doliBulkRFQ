@@ -2,6 +2,13 @@
 
 All notable changes to the Bulk RFQ module are documented here.
 
+## [1.2.6] - 2026-04-21
+
+### Fixed
+- Namespace/remove lang keys colliding with Dolibarr core:
+  - Removed duplicates `Qty`, `SelectAll` (values were effectively equivalent to core)
+  - Renamed `ProductRef`, `ProductLabel`, `ProductType`, `SupplierRef` → `Rfq*` variants so our custom wording is preserved without overriding core (esp. `SupplierRef` where core means "Vendor SKU")
+
 ## [1.2.1] - 2026-04-06
 
 ### Fixed
